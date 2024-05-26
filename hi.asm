@@ -21,13 +21,75 @@ DATASEG
     caunter dw , 0
 SEGMENT hiddenSeg
 input db 0,0,126
-wights db 1,0,1
+wights db 2,0,2
 wights2 db 1,2,3,4
 ENDS hiddenSeg
 SEGMENT outputSeg
     dw 2000 dup(?)
 ENDS outputSeg
+SEGMENT bgSeg
+    dB 320*200 dup(32)
+ENDS bgSeg
 CODESEG
+proc bagrond
+    push ax
+    push di
+    push es
+    push cx
+    push dx
+    push ds
+    push bx
+    mov cx ,0
+    mov di ,0
+    mov bx , offset killPlcae
+    mov bx , [bx]
+    mov ax,0A000h
+    mov es, ax
+    mov ax,bgSeg
+    mov ds, ax
+    mov ax , 0
+    mov dx , 0
+    rowes:
+        inc cx
+        add di, 320
+        sub di , ax
+        mov ax ,0
+        colomes:
+            inc ax
+            inc di
+            mov dl , [byte ptr di]
+            mov [es:di] , dl
+            cmp ax , bx
+            jnz colomes
+        cmp cx , 200
+        jnz rowes
+    mov di, bx; second bg
+    add di , 10
+    mov cx ,0
+    mov ax , 0
+    rowe2:
+        inc cx
+        add di, 320
+        sub di , ax
+        mov ax ,0
+        colome2:
+            inc ax
+            inc di
+            mov dl , [byte ptr di]
+            mov [es:di] , dl
+            cmp ax , 300
+            jnz colome2
+        cmp cx , 200
+        jnz rowe2
+    pop bx
+    pop ds
+    pop dx
+    pop cx
+    pop es
+    pop di
+    pop ax
+    ret
+endp bagrond
 proc waite
     push ax
     push cx
@@ -43,8 +105,6 @@ proc drowkiller
     push cx
     push di
     push dx
-    mov dl , 175
-    sub dl , [byte offset sizeOffKiller]
     mov di, [offset killPlcae]
     add di , 5
     mov cx ,0
@@ -60,26 +120,8 @@ proc drowkiller
             mov [es:di] , 0
             cmp ax , 10
             jnz colome
-        cmp cl , [byte offset sizeOffKiller] 
+        cmp cx , 200
         jnz rowe
-    mov di, 320*200
-    add di , [offset killPlcae]
-    add di , 5
-    mov cx ,0
-    mov ax , 0
-    rowss:
-        inc cx
-        sub di, 320
-        sub di , ax
-        mov ax ,0
-        colomss:
-            inc ax
-            inc di
-            mov [es:di] , 0
-            cmp ax , 10
-            jnz colomss
-        cmp cx , dx
-        jnz rowss
     mov dl , 175
     sub dl , [byte offset sizeOffKiller]
     mov di, [offset killPlcae]
@@ -210,10 +252,22 @@ proc readNN
 endp readNN
 proc newPIP2
     push bx
+    push ax
     mov bx , offset killplcae
-    mov [bx], 300 
+    mov ax , 325
+    mov [bx], ax 
     mov bx , offset sizeoffkiller
-    sub [bx], 30
+    mov al , [byte ptr bx]
+    cmp al, 40
+    jle lower
+    mov ax , 50
+    sub [bx], ax
+    jmp d
+    lower: 
+    mov al , 120
+    mov [byte ptr bx] , al
+    d:
+    pop ax
     pop bx
     ret
 endp newPIP2
@@ -234,7 +288,7 @@ proc move
     mov ax, outputSeg
     mov es, ax
     mov si , [es:0]
-    cmp si, 350
+    cmp si, 355 
     jle down
     ja up
     down:     
@@ -288,7 +342,7 @@ proc discigoin
     mov al , [byte offset sizeOffKiller]
     mov [es:di], al 
     inc di
-    mov ax , 275 
+    mov ax , 140 
     sub al , [byte offset sizeOffKiller]
     mov [es:di], al 
     pop bx
@@ -309,6 +363,7 @@ inf:
     call readNN
     call move
     call drowkiller
+    call bagrond
     call drowPlayer
     call waite
     jmp inf
